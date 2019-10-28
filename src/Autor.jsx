@@ -108,11 +108,14 @@ export default class AutorBox extends Component {
     constructor(){
         super()
         this.state = {
-          lista:[]
+          lista:[],
+          fetching: false,
+          error: false
         }         
       }
 
       componentDidMount(){
+        this.setState({fetching: true});
         fetch('http://cdc-react.herokuapp.com/api/autores')
         .then(
           response=>{
@@ -122,13 +125,14 @@ export default class AutorBox extends Component {
               return;
             }
             response.json().then(data=> {
-              this.setState({lista:data})
+              this.setState({lista:data, fetching: false})
               }
             );
           }
         )
         .catch(function(err) {
           console.log('Fetch Error :-S', err);
+          this.setState({error: true, fetching: false});
         });
     
         PubSub.subscribe('atualizaListagemAutores', (topico, novaListagem)=>{
@@ -140,7 +144,11 @@ export default class AutorBox extends Component {
         return (
             <div className="content" id="content">
                 <FormularioAutor/>
-                <TabelaAutores lista={this.state.lista}/>
+                {this.state.fetching && <div>Carregando lista...</div>}
+                {(!this.state.fetching && !this.state.error) &&
+                  <TabelaAutores lista={this.state.lista}/>
+                }
+                {this.state.error && <div>Erro ao carregar a lista</div>}
             </div>
         )
     }
